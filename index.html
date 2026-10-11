@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Routen-Helfer Test</title>
+<style>
+:root{--bg:#f3f5f6;--surface:#fff;--line:#dde2e5;--fg:#1a1f24;--muted:#5b6670;--accent:#1f6f8b;--ok:#2e7d4f;--bad:#b3261e}
+@media (prefers-color-scheme: dark){:root{--bg:#12171b;--surface:#1a2127;--line:#2c353d;--fg:#e7ecef;--muted:#9aa6b0;--accent:#5fb3cf;--ok:#6cc58f;--bad:#f08a80;color-scheme:dark}}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:640px;margin:0 auto;padding:28px 16px 48px;display:flex;flex-direction:column;gap:16px}
+h1{margin:0;font-size:28px}
+p{margin:0;color:var(--muted)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4px}
+input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
+button,a.btn{font:600 15px system-ui,sans-serif;padding:8px 14px;border-radius:7px;border:1px solid var(--accent);background:var(--accent);color:var(--surface);cursor:pointer;text-decoration:none;align-self:flex-start}
+pre{margin:0;font:13px ui-monospace,Consolas,monospace;white-space:pre-wrap;background:var(--bg);padding:8px 10px;border-radius:6px}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+</style>
+</head>
+<body>
+<main>
+  <h1>Routen-Helfer Test</h1>
+  <p>Prüft, ob diese öffentliche Seite Wind und eine Strecke abrufen und als GPX-Datei anbieten kann. Keine persönlichen Daten.</p>
+  <div class="card">
+    <div class="grid">
+      <label for="lat1">Start Breite<input id="lat1" value="50.200"></label>
+      <label for="lon1">Start Länge<input id="lon1" value="8.600"></label>
+      <label for="lat2">Ziel Breite<input id="lat2" value="50.250"></label>
+      <label for="lon2">Ziel Länge<input id="lon2" value="8.450"></label>
+    </div>
+    <button id="go">Abrufen</button>
+    <pre id="out">Noch nicht abgerufen.</pre>
+    <a class="btn" id="dl" hidden download="test-route.gpx">GPX herunterladen</a>
+  </div>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+const dirName = d => ['N','NO','O','SO','S','SW','W','NW'][Math.round(d/45)%8];
+$('go').addEventListener('click', async () => {
+  const [a,b,c,d] = ['lat1','lon1','lat2','lon2'].map(k => parseFloat($(k).value));
+  const lines = [];
+  try {
+    const w = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${a}&longitude=${b}&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh`)).json();
+    lines.push(`Wind: ${w.current.wind_speed_10m} km/h aus ${dirName(w.current.wind_direction_10m)} (${w.current.wind_direction_10m}°)  ✓`);
+  } catch(e){ lines.push('Wind: blockiert (' + e.message + ')  ✗'); }
+  try {
+    const r = await (await fetch(`https://brouter.de/brouter?lonlats=${b},${a}|${d},${c}&profile=fastbike&alternativeidx=0&format=geojson`)).json();
+    const f = r.features[0], p = f.properties, pts = f.geometry.coordinates;
+    lines.push(`Strecke: ${(p['track-length']/1000).toFixed(1)} km, ${p['filtered ascend']} hm, ${pts.length} Punkte  ✓`);
+    const gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="trainings-routen" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>Testroute</name><trkseg>' +
+      pts.map(q => `<trkpt lat="${q[1]}" lon="${q[0]}"><ele>${q[2] ?? 0}</ele></trkpt>`).join('') + '</trkseg></trk></gpx>';
+    $('dl').href = URL.createObjectURL(new Blob([gpx], {type:'application/gpx+xml'})); $('dl').hidden = false;
+  } catch(e){ lines.push('Strecke: blockiert (' + e.message + ')  ✗'); }
+  $('out').textContent = lines.join('\n');
+});
+</script>
+</body>
+</html>
