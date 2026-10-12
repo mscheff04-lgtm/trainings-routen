@@ -92,3 +92,18 @@ test('Abgleich mit der Zieldauer', () => {
   assert.equal(fitToTarget(80, 30, 120).kind, 'lang');
   assert.equal(fitToTarget(80, 30, 0).kind, 'ohne-ziel');
 });
+
+import { shortenToTarget } from '../helfer.js';
+
+test('Runde kürzen: so weit wie möglich, dann direkt heim', () => {
+  const home = { lat: 50, lon: 7 };
+  // Runde: 4 Punkte im Quadrat mit 10 km Kantenlänge, Start am Zuhause
+  const k = 10 / 111.2, l = 10 / (111.2 * Math.cos((50 * Math.PI) / 180));
+  const A = home, B = { lat: 50, lon: 7 + l }, C = { lat: 50 + k, lon: 7 + l }, D = { lat: 50 + k, lon: 7 };
+  const pts = [home, A, B, C, D, A, home];
+  // ganze Runde 40 km × 1,3 bei 30 km/h ≈ 104 min; Ziel 75 min → bis C und heim (20 + 14,1 km) × 1,3 ≈ 88 min zu viel → bis B (20 km × 1,3 ≈ 52 min)
+  assert.deepEqual(shortenToTarget(pts, 30, 75), [home, A, B, home]);
+  assert.deepEqual(shortenToTarget(pts, 30, 90), [home, A, B, C, home]);
+  assert.equal(shortenToTarget(pts, 30, 5), null);
+  assert.equal(shortenToTarget(pts.slice(0, 3), 30, 60), null);
+});

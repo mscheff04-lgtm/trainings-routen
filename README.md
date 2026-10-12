@@ -20,7 +20,7 @@ https://mscheff04-lgtm.github.io/trainings-routen/#start=50.3,8.6&home=50.2,8.6&
 | `unit`, `name` | Einheit (E1/E2/E3) und Tourname für Überschrift und Dateinamen |
 | `via` | Wegpunkte der Tour (`lat,lon;lat,lon;…`, bis 40) → **Tour ab Zuhause**: Einstieg am nächstgelegenen Punkt, Runde, zurück nach Hause |
 | `loop` | `1` = Rundtour (Einstieg frei wählbar, Runde wird geschlossen) |
-| `target` | geplante Dauer in Minuten → Abgleich ±15 %, bei zu kurz automatisch Verlängerung ab Zuhause |
+| `target` | geplante Dauer in Minuten → Abgleich ±15 %; zu kurz: Verlängerung ab Zuhause, zu lang (Rundtour): gekürzte Fassung – Runde so weit, dass der direkte Heimweg noch in die Zeit passt |
 | `bike` | `rennrad` (BRouter-Profil fastbike) oder `gravel` (trekking) |
 
 Ohne Fragment lässt sich alles unten auf der Seite von Hand eingeben.

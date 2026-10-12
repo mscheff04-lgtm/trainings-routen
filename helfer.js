@@ -146,3 +146,21 @@ export function fitToTarget(km, kmh, targetMin) {
   const kind = minutes < targetMin * 0.85 ? 'kurz' : minutes > targetMin * 1.15 ? 'lang' : 'passt';
   return { minutes, kind, delta };
 }
+
+/**
+ * Runde ab Zuhause kürzen: points = [home, p0, …, pn, (p0), home]. Fährt die Runde nur bis pk
+ * und dann direkt heim; k so groß wie möglich, damit die geschätzte Zeit (Luftlinie × 1,3)
+ * die Zieldauer nicht übersteigt. Liefert die gekürzte Punktliste oder null (nicht kürzbar).
+ */
+export function shortenToTarget(points, kmh, targetMin) {
+  if (points.length < 5 || !targetMin) return null;
+  const home = points[0], mid = points.slice(1, -1);
+  const est = k => {
+    const path = [home, ...mid.slice(0, k + 1), home];
+    let km = 0;
+    for (let i = 1; i < path.length; i++) km += dist(path[i - 1], path[i]);
+    return (km * ROAD_FACTOR / kmh) * 60;
+  };
+  for (let k = mid.length - 2; k >= 1; k--) if (est(k) <= targetMin) return [home, ...mid.slice(0, k + 1), home];
+  return null;
+}
