@@ -18,7 +18,9 @@ const point = s => {
 };
 const num = s => (s === null || s === undefined || s === '' || !Number.isFinite(Number(s)) ? null : Number(s));
 
-/** Fragment (#start=…&home=…&ext=…&bearing=…&kmh=…&unit=…&name=…) → Parameter. */
+const pointList = s => String(s || '').split(';').map(point).filter(Boolean);
+
+/** Fragment (#start=…&home=…&ext=…&bearing=…&kmh=…&unit=…&name=…&via=…&loop=1&target=…&bike=…) → Parameter. */
 export function parseParams(hash) {
   const p = new URLSearchParams(String(hash || '').replace(/^#/, ''));
   const bearing = num(p.get('bearing'));
@@ -30,6 +32,10 @@ export function parseParams(hash) {
     kmh: Math.min(45, Math.max(10, num(p.get('kmh')) || 25)),
     unit: (p.get('unit') || '').slice(0, 10),
     name: (p.get('name') || '').slice(0, 80),
+    via: pointList(p.get('via')).slice(0, 40),
+    loop: p.get('loop') === '1',
+    target: Math.max(0, Math.round(num(p.get('target')) || 0)),
+    bike: p.get('bike') === 'gravel' ? 'gravel' : 'rennrad',
   };
 }
 
@@ -100,4 +106,43 @@ export function nextHours(hourly, nowIso, n = 8) {
   return hourly.time.slice(i, i + n).map((t, k) => ({
     time: t, speed: hourly.wind_speed_10m[i + k], from: hourly.wind_direction_10m[i + k], gust: hourly.wind_gusts_10m ? hourly.wind_gusts_10m[i + k] : null,
   }));
+}
+
+/** BRouter-Profil je Rad: Rennrad „fastbike“, Gravel „trekking“ (lässt Feld- und Waldwege zu). */
+export const PROFILE = { rennrad: 'fastbike', gravel: 'trekking' };
+
+const dist = (a, b) => {
+  const R = 6371, dLat = rad(b.lat - a.lat), dLon = rad(b.lon - a.lon);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
+};
+
+/**
+ * Reihenfolge der Wegpunkte für „Tour ab Zuhause“. Rundtour: Einstieg am Wegpunkt, der dem
+ * Zuhause am nächsten liegt, Runde schließen; reverse dreht die Fahrtrichtung (Wind).
+ * Strecke A→B: Wegpunkte wie gespeichert bzw. umgedreht.
+ * @returns {{lat, lon}[]} Punkte für BRouter inkl. Zuhause am Anfang und Ende (falls home)
+ */
+export function tourSequence(via, { loop = false, home = null, reverse = false } = {}) {
+  if (!via.length) return [];
+  let seq = via.slice();
+  if (loop) {
+    if (home) {
+      let k = 0;
+      seq.forEach((p, i) => { if (dist(home, p) < dist(home, seq[k])) k = i; });
+      seq = [...seq.slice(k), ...seq.slice(0, k)];
+    }
+    if (reverse) seq = [seq[0], ...seq.slice(1).reverse()];
+    seq.push(seq[0]);
+  } else if (reverse) seq.reverse();
+  return home ? [home, ...seq, home] : seq;
+}
+
+/** Geschätzte Fahrzeit und Abgleich mit der Zieldauer (±15 %). */
+export function fitToTarget(km, kmh, targetMin) {
+  const minutes = Math.round((km / kmh) * 60);
+  if (!targetMin) return { minutes, kind: 'ohne-ziel', delta: 0 };
+  const delta = minutes - targetMin;
+  const kind = minutes < targetMin * 0.85 ? 'kurz' : minutes > targetMin * 1.15 ? 'lang' : 'passt';
+  return { minutes, kind, delta };
 }

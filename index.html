@@ -41,13 +41,20 @@ summary{cursor:pointer;font-family:var(--display);font-weight:700;text-transform
 <main>
   <div class="eyebrow" id="eyebrow">Trainings-App · Routen-Helfer</div>
   <h1 id="title">Routen-Helfer</h1>
-  <p class="muted">Wind am Start, Empfehlung für die Fahrtrichtung und GPX für Anfahrt oder Verlängerung. Die Angaben kommen aus dem Link der Trainings-App; diese Seite speichert nichts.</p>
+  <p class="muted">Wind, Empfehlung für die Fahrtrichtung und GPX: die Tour ab Zuhause, passend zur geplanten Dauer, oder Anfahrt und Verlängerung. Die Angaben kommen aus dem Link der Trainings-App; diese Seite speichert nichts.</p>
 
   <section id="wind-box" hidden>
     <h2>Wind</h2>
     <div class="big" id="wind-now"></div>
     <div class="advice" id="advice"></div>
     <table><thead><tr><th>Uhrzeit</th><th>Wind</th><th>aus</th><th>Böen</th></tr></thead><tbody id="wind-hours"></tbody></table>
+  </section>
+
+  <section id="tour-box" hidden>
+    <h2>Tour ab Zuhause</h2>
+    <p class="muted" id="tour-text"></p>
+    <div class="row" id="tour"></div>
+    <p class="muted small">Nachgeroutet mit BRouter über die Wegpunkte der komoot-Tour; kann an einzelnen Stellen von der Originalspur abweichen. In komoot als GPX importieren.</p>
   </section>
 
   <section id="approach-box" hidden>

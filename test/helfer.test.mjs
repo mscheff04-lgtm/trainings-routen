@@ -64,3 +64,31 @@ test('Stundenwerte ab jetzt', () => {
   assert.deepEqual(h[0], { time: '2026-10-12T09:00', speed: 10, from: 90, gust: 19 });
   assert.equal(compass(359), 'N');
 });
+
+import { tourSequence, fitToTarget, PROFILE } from '../helfer.js';
+
+test('Wegpunkte, Rundtour-Flag, Zieldauer, Rad aus dem Fragment', () => {
+  const p = parseParams('#via=50.1,7.1;50.2,7.2;x;50.3,7.3&loop=1&target=150&bike=gravel');
+  assert.equal(p.via.length, 3);
+  assert.equal(p.loop, true);
+  assert.equal(p.target, 150);
+  assert.equal(p.bike, 'gravel');
+  assert.equal(parseParams('#bike=foo').bike, 'rennrad');
+  assert.equal(PROFILE.gravel, 'trekking');
+});
+
+test('Tour ab Zuhause: Einstieg am nächsten Punkt, Runde schließen, Richtung drehen', () => {
+  const A = { lat: 50, lon: 7 }, B = { lat: 50, lon: 7.1 }, C = { lat: 50.1, lon: 7.1 }, D = { lat: 50.1, lon: 7 };
+  const home = { lat: 50.11, lon: 7.11 }; // nahe C
+  assert.deepEqual(tourSequence([A, B, C, D], { loop: true, home }), [home, C, D, A, B, C, home]);
+  assert.deepEqual(tourSequence([A, B, C, D], { loop: true, home, reverse: true }), [home, C, B, A, D, C, home]);
+  assert.deepEqual(tourSequence([A, B, C], { loop: false, reverse: true }), [C, B, A]);
+  assert.deepEqual(tourSequence([], { home }), []);
+});
+
+test('Abgleich mit der Zieldauer', () => {
+  assert.deepEqual(fitToTarget(60, 30, 120), { minutes: 120, kind: 'passt', delta: 0 });
+  assert.equal(fitToTarget(40, 30, 120).kind, 'kurz');
+  assert.equal(fitToTarget(80, 30, 120).kind, 'lang');
+  assert.equal(fitToTarget(80, 30, 0).kind, 'ohne-ziel');
+});
