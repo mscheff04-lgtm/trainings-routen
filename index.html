@@ -2,60 +2,83 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Routen-Helfer Test</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="referrer" content="no-referrer">
+<title>Routen-Helfer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#f3f5f6;--surface:#fff;--line:#dde2e5;--fg:#1a1f24;--muted:#5b6670;--accent:#1f6f8b;--ok:#2e7d4f;--bad:#b3261e}
-@media (prefers-color-scheme: dark){:root{--bg:#12171b;--surface:#1a2127;--line:#2c353d;--fg:#e7ecef;--muted:#9aa6b0;--accent:#5fb3cf;--ok:#6cc58f;--bad:#f08a80;color-scheme:dark}}
-body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
-main{max-width:640px;margin:0 auto;padding:28px 16px 48px;display:flex;flex-direction:column;gap:16px}
-h1{margin:0;font-size:28px}
-p{margin:0;color:var(--muted)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:10px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
-label{display:flex;flex-direction:column;font-size:13px;color:var(--muted);gap:4px}
-input{font:inherit;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg)}
-button,a.btn{font:600 15px system-ui,sans-serif;padding:8px 14px;border-radius:7px;border:1px solid var(--accent);background:var(--accent);color:var(--surface);cursor:pointer;text-decoration:none;align-self:flex-start}
-pre{margin:0;font:13px ui-monospace,Consolas,monospace;white-space:pre-wrap;background:var(--bg);padding:8px 10px;border-radius:6px}
-.ok{color:var(--ok)}.bad{color:var(--bad)}
+:root{--ink:#0e1513;--surface2:#1d2a26;--line:#2d3d37;--text:#e8efe9;--muted:#a3b6ad;--accent:#7fb3c9;--on-accent:#0e1513;--ok:#6fbf8a;--warn:#e0b062;--alert:#e06a55;
+  --display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;--body:"Source Sans 3",system-ui,-apple-system,sans-serif;--mono:"JetBrains Mono",ui-monospace,Menlo,monospace;color-scheme:dark}
+@media (prefers-color-scheme: light){:root{--ink:#eef2ef;--surface2:#f3f6f4;--line:#c8d4cd;--text:#132019;--muted:#4a5c53;--accent:#2f6f8a;--on-accent:#fff;--ok:#2e7d4f;--warn:#8a6100;--alert:#b3261e;color-scheme:light}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ink);color:var(--text);font:16px/1.55 var(--body)}
+main{max-width:760px;margin:0 auto;padding:40px 16px 64px}
+a{color:var(--accent)}
+.eyebrow{font-family:var(--display);font-weight:600;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+h1{font-family:var(--display);font-weight:800;text-transform:uppercase;font-size:clamp(44px,11vw,96px);line-height:.92;margin:8px 0 12px;letter-spacing:.01em;overflow-wrap:anywhere}
+h2{font-family:var(--display);font-weight:700;text-transform:uppercase;font-size:clamp(24px,5vw,34px);margin:40px 0 10px;letter-spacing:.02em;border-top:1px solid var(--line);padding-top:24px}
+p{margin:0 0 10px}
+.muted{color:var(--muted)}
+.big{font-family:var(--display);font-weight:700;font-size:clamp(28px,7vw,48px);line-height:1.05;text-transform:uppercase}
+.advice{border-left:3px solid var(--accent);padding:12px 16px;background:var(--surface2);margin:12px 0}
+.advice.warn{border-left-color:var(--warn)}.advice.alert{border-left-color:var(--alert)}
+table{border-collapse:collapse;width:100%;font-family:var(--mono);font-size:13px}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}th{color:var(--muted);font-weight:400}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:10px 20px;border-radius:999px;border:1px solid var(--accent);background:transparent;color:var(--accent);font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.05em;text-transform:uppercase;text-decoration:none;cursor:pointer}
+.btn.fill{background:var(--accent);color:var(--on-accent)}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px 14px}
+label{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--muted)}
+input{font:14px var(--mono);padding:10px 14px;border:0;border-radius:999px;background:var(--surface2);color:var(--text);min-height:44px;width:100%}
+details{border-top:1px solid var(--line);margin-top:40px;padding-top:12px}
+summary{cursor:pointer;font-family:var(--display);font-weight:700;text-transform:uppercase;font-size:20px}
+.small{font-size:13px}
 </style>
 </head>
 <body>
 <main>
-  <h1>Routen-Helfer Test</h1>
-  <p>Prüft, ob diese öffentliche Seite Wind und eine Strecke abrufen und als GPX-Datei anbieten kann. Keine persönlichen Daten.</p>
-  <div class="card">
+  <div class="eyebrow" id="eyebrow">Trainings-App · Routen-Helfer</div>
+  <h1 id="title">Routen-Helfer</h1>
+  <p class="muted">Wind am Start, Empfehlung für die Fahrtrichtung und GPX für Anfahrt oder Verlängerung. Die Angaben kommen aus dem Link der Trainings-App; diese Seite speichert nichts.</p>
+
+  <section id="wind-box" hidden>
+    <h2>Wind</h2>
+    <div class="big" id="wind-now"></div>
+    <div class="advice" id="advice"></div>
+    <table><thead><tr><th>Uhrzeit</th><th>Wind</th><th>aus</th><th>Böen</th></tr></thead><tbody id="wind-hours"></tbody></table>
+  </section>
+
+  <section id="approach-box" hidden>
+    <h2>Anfahrt</h2>
+    <p class="muted">Von zu Hause zum Tourstart und zurück, berechnet mit BRouter (Profil Rennrad). In komoot als GPX importieren.</p>
+    <div class="row" id="approach"></div>
+  </section>
+
+  <section id="ext-box" hidden>
+    <h2>Verlängerung</h2>
+    <p class="muted" id="ext-text"></p>
+    <div class="row" id="ext"></div>
+  </section>
+
+  <div id="msg"></div>
+
+  <details id="manual">
+    <summary>Ohne App-Link verwenden</summary>
+    <p class="muted">Koordinaten als „Breite, Länge“ (Punkt als Dezimalzeichen).</p>
     <div class="grid">
-      <label for="lat1">Start Breite<input id="lat1" value="50.200"></label>
-      <label for="lon1">Start Länge<input id="lon1" value="8.600"></label>
-      <label for="lat2">Ziel Breite<input id="lat2" value="50.250"></label>
-      <label for="lon2">Ziel Länge<input id="lon2" value="8.450"></label>
+      <label>Start<input id="m-start" placeholder="50.12, 8.6"></label>
+      <label>Zuhause (für Anfahrt)<input id="m-home" placeholder="optional"></label>
+      <label>Verlängerung (min)<input id="m-ext" type="number" min="0" placeholder="0"></label>
+      <label>Richtung Flachstrecke (°)<input id="m-bearing" type="number" min="0" max="359" placeholder="optional"></label>
+      <label>Schnitt (km/h)<input id="m-kmh" type="number" min="10" max="45" value="25"></label>
     </div>
-    <button id="go">Abrufen</button>
-    <pre id="out">Noch nicht abgerufen.</pre>
-    <a class="btn" id="dl" hidden download="test-route.gpx">GPX herunterladen</a>
-  </div>
+    <div class="row"><button class="btn fill" id="m-go" type="button">Berechnen</button></div>
+  </details>
+
+  <p class="muted small" style="margin-top:32px">Daten: Wind von <a href="https://open-meteo.com/">Open-Meteo</a>, Strecken von <a href="https://brouter.de/">BRouter</a> (OpenStreetMap). Annahmen: Straße ≈ Luftlinie × 1,3; unter 10 km/h Wind gilt die Richtung als egal; „von vorn“ heißt Wind innerhalb ±70° der Fahrtrichtung.</p>
 </main>
-<script>
-const $ = id => document.getElementById(id);
-const dirName = d => ['N','NO','O','SO','S','SW','W','NW'][Math.round(d/45)%8];
-$('go').addEventListener('click', async () => {
-  const [a,b,c,d] = ['lat1','lon1','lat2','lon2'].map(k => parseFloat($(k).value));
-  const lines = [];
-  try {
-    const w = await (await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${a}&longitude=${b}&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=kmh`)).json();
-    lines.push(`Wind: ${w.current.wind_speed_10m} km/h aus ${dirName(w.current.wind_direction_10m)} (${w.current.wind_direction_10m}°)  ✓`);
-  } catch(e){ lines.push('Wind: blockiert (' + e.message + ')  ✗'); }
-  try {
-    const r = await (await fetch(`https://brouter.de/brouter?lonlats=${b},${a}|${d},${c}&profile=fastbike&alternativeidx=0&format=geojson`)).json();
-    const f = r.features[0], p = f.properties, pts = f.geometry.coordinates;
-    lines.push(`Strecke: ${(p['track-length']/1000).toFixed(1)} km, ${p['filtered ascend']} hm, ${pts.length} Punkte  ✓`);
-    const gpx = '<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="trainings-routen" xmlns="http://www.topografix.com/GPX/1/1"><trk><name>Testroute</name><trkseg>' +
-      pts.map(q => `<trkpt lat="${q[1]}" lon="${q[0]}"><ele>${q[2] ?? 0}</ele></trkpt>`).join('') + '</trkseg></trk></gpx>';
-    $('dl').href = URL.createObjectURL(new Blob([gpx], {type:'application/gpx+xml'})); $('dl').hidden = false;
-  } catch(e){ lines.push('Strecke: blockiert (' + e.message + ')  ✗'); }
-  $('out').textContent = lines.join('\n');
-});
-</script>
+<script type="module" src="app.js"></script>
 </body>
 </html>
