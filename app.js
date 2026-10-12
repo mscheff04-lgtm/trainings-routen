@@ -1,6 +1,6 @@
 // Routen-Helfer: liest die Angaben aus dem Fragment, ruft Wind (Open-Meteo) und Strecken
 // (BRouter) ab und bietet GPX-Dateien an. Speichert nichts.
-import { parseParams, windAdvice, compass, extensionPlan, correctRadius, destination, toGpx, fileName, nextHours, tourSequence, fitToTarget, PROFILE } from './helfer.js';
+import { parseParams, windAdvice, compass, extensionPlan, correctRadius, destination, toGpx, fileName, nextHours, tourSequence, fitToTarget, shortenToTarget, PROFILE } from './helfer.js';
 
 const $ = id => document.getElementById(id);
 const UNIT = { E1: 'Lange Fahrt', E2: 'Schwelle', E3: 'VO₂max' };
@@ -93,13 +93,28 @@ async function run(p) {
     $('tour-box').hidden = false;
     const reverse = !!adv && adv.kind === 'umgekehrt';
     try {
-      const r = await route(tourSequence(p.via, { loop: p.loop, home: p.home, reverse }), profile);
+      const seq = tourSequence(p.via, { loop: p.loop, home: p.home, reverse });
+      const r = await route(seq, profile);
       const fit = fitToTarget(r.km, p.kmh, p.target);
       $('tour-text').textContent = `Von zu Hause über die Tour und zurück${reverse ? ' (gegen die gespeicherte Richtung)' : ''}: ${r.km.toFixed(1)} km, ca. ${fit.minutes} min bei ${p.kmh} km/h`
         + (fit.kind === 'passt' ? ` – passt zur geplanten Dauer (${p.target} min).`
           : fit.kind === 'kurz' ? ` – ${-fit.delta} min kürzer als geplant (${p.target} min), Verlängerung unten.`
-            : fit.kind === 'lang' ? ` – ${fit.delta} min länger als geplant (${p.target} min): unterwegs abkürzen oder eine kürzere Tour wählen.` : '.');
-      gpxButton($('tour'), name, 'ab-zuhause', 'Tour ab Zuhause', r, p.kmh);
+            : fit.kind === 'lang' ? ` – ${fit.delta} min länger als geplant (${p.target} min).` : '.');
+      if (fit.kind === 'lang' && p.loop) {
+        // Gekürzt: Runde nur bis zu dem Punkt, ab dem es direkt heim noch in die Zeit passt.
+        let short = null, sr = null;
+        for (const f of [1, 0.9, 0.8]) {
+          const pts = shortenToTarget(seq, p.kmh, p.target * f);
+          if (!pts) break;
+          sr = await route(pts, profile); short = fitToTarget(sr.km, p.kmh, p.target);
+          if (short.kind !== 'lang') break;
+        }
+        if (sr) {
+          gpxButton($('tour'), name, 'gekuerzt', 'Gekürzt ab Zuhause', sr, p.kmh);
+          $('tour-text').textContent += ` Gekürzte Fassung: ${sr.km.toFixed(1)} km, ca. ${short.minutes} min – die Runde so weit fahren, dass der direkte Heimweg noch in die geplante Zeit passt.`;
+        } else $('tour-text').textContent += ' Nicht sinnvoll kürzbar: eine kürzere Tour wählen.';
+      } else if (fit.kind === 'lang') $('tour-text').textContent += ' Unterwegs abkürzen oder eine kürzere Tour wählen.';
+      gpxButton($('tour'), name, 'ab-zuhause', 'Ganze Tour ab Zuhause', r, p.kmh);
       if (fit.kind === 'kurz') await extension(p, p.home, -fit.delta, windFrom, name, profile);
     } catch (e) { msg(`Tour nicht berechenbar (${e.message}).`); }
     return;
